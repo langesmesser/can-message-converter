@@ -2,6 +2,7 @@
 __pycache__/
 *.pyc
 *.spec
+!build.spec
 build/
 dist/
 *.egg-info/
