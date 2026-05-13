@@ -1,5 +1,5 @@
 import pytest
-from dataclasses import asdict
+from dataclasses import FrozenInstanceError
 from src.converters.base import FrameRecord, Converter
 
 
@@ -48,7 +48,7 @@ def test_framerecord_lin():
 
 def test_framerecord_immutable():
     fr = FrameRecord(timestamp=1.0, arbitration_id=0x100)
-    with pytest.raises(Exception):
+    with pytest.raises(FrozenInstanceError):
         fr.timestamp = 2.0
 
 
