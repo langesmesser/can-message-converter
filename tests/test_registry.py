@@ -22,6 +22,18 @@ def test_writers_have_blf_mf4_asc_csv():
     assert "csv" in WRITERS
 
 
+def test_xlsx_writer_registered():
+    assert "xlsx" in WRITERS
+    writer = get_writer("xlsx")
+    assert callable(writer)
+
+
+def test_xlsx_not_in_output_formats():
+    for ext in ("blf", "asc", "mf4", "txt"):
+        formats = get_output_formats(ext)
+        assert "xlsx" not in formats
+
+
 def test_get_reader_returns_callable():
     reader = get_reader("blf")
     assert callable(reader)
@@ -58,9 +70,14 @@ def test_get_output_formats_all_for_unknown():
     assert "csv" in formats
 
 
+def test_txt_only_outputs_asc():
+    formats = get_output_formats("txt")
+    assert formats == ["asc"]
+
+
 def test_supports_extension():
     assert supports_extension("blf") is True
     assert supports_extension("asc") is True
     assert supports_extension("mf4") is True
     assert supports_extension("csv") is True
-    assert supports_extension("txt") is False
+    assert supports_extension("txt") is True

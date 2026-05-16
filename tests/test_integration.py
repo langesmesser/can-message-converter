@@ -6,6 +6,7 @@ from src.converters.blf_converter import BLFReader, BLFWriter
 from src.converters.asc_converter import ASCReader, ASCWriter
 from src.converters.mf4_converter import MF4Reader, MF4Writer
 from src.converters.csv_writer import CSVWriter
+from src.converters.txt_converter import TXTReader
 
 
 _SAMPLE = [
@@ -166,3 +167,34 @@ class TestMF4toX:
         finally:
             os.unlink(mf4_path)
             os.unlink(csv_path)
+
+
+class TestTXTtoX:
+    _TXT_CONTENT = [
+        "0.0    100    01 02 03 04 05 06 07 08",
+        "0.5    200    AA BB CC DD",
+        "1.0    300    11 22 33",
+    ]
+
+    def test_txt_to_asc(self):
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".txt", delete=False, encoding="utf-8"
+        ) as f:
+            f.write("\n".join(self._TXT_CONTENT))
+            txt_path = f.name
+        with tempfile.NamedTemporaryFile(suffix=".asc", delete=False) as f:
+            asc_path = f.name
+        try:
+            records = TXTReader.from_file(txt_path)
+            ASCWriter.to_file(records, asc_path)
+            result = ASCReader.from_file(asc_path)
+            assert len(result) == 3
+            assert result[0].arbitration_id == 0x100
+            assert result[0].data == b"\x01\x02\x03\x04\x05\x06\x07\x08"
+            assert result[1].arbitration_id == 0x200
+            assert result[1].is_extended == False
+            assert result[2].arbitration_id == 0x300
+        finally:
+            os.unlink(txt_path)
+            os.unlink(asc_path)
+

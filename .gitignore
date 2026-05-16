@@ -7,3 +7,9 @@ build/
 dist/
 *.egg-info/
 .pytest_cache/
+data/
+design-md/
+projects/
+check-st*
+.claude/settings.local.json
+项目成果总结.txt
