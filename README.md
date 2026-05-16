@@ -1,5 +1,6 @@
 # CAN Message Converter
 
+- [Usage](#usage)
 - [Getting Started](#getting-started--documentation)
 - [Developing](#developing)
 - [License](#license)
@@ -16,6 +17,42 @@ The key features of CAN Message Converter are:
 - **State Management**: 8 theme families × light/dark mode = 16 visual variants, with QSS generated dynamically from Python token dictionaries. All state is local — no cloud dependencies, no telemetry.
 
 For more information, refer to the [architecture overview](CLAUDE.md).
+
+---
+
+## Usage
+
+### GUI
+
+```bash
+python src/main.py
+```
+
+Drag and drop input files into the top card, select the desired output format from the dropdown, and click **Convert**. Progress is shown per file in real time.
+
+**Quick workflow:**
+
+1. Drop `.blf`, `.mf4`, `.asc`, or `.txt` files into the input area
+2. Choose the output format (`.blf` / `.mf4` / `.asc` / `.csv`)
+3. Click **Convert** — output files land alongside the originals
+
+**One-click TXT → XLSX:** When the input is `.txt`, the **Convert to XLSX** button is available, producing a spreadsheet with columns: timestamp, channel, ID (hex), and data (hex).
+
+### Build .exe
+
+```bash
+python -m pytest tests/ -v    # all 97 tests must pass
+pyinstaller build.spec --noconfirm
+```
+
+### Supported formats
+
+| Input | Output |
+|-------|--------|
+| `.blf` | `.mf4` / `.asc` / `.csv` |
+| `.mf4` | `.blf` / `.asc` / `.csv` |
+| `.asc` | `.blf` / `.mf4` / `.csv` |
+| `.txt` | `.asc` / `.xlsx` |
 
 ---
 
