@@ -1,79 +1,168 @@
-[简体中文](README_zh.md)
+<div align="center">
 
 # CAN Message Converter
 
-- [Usage](#usage)
-- [Getting Started](#getting-started)
-- [Developing](#developing)
-- [License](#license)
+**Convert CAN logs, keep the workflow local.**
+
+![Python](https://img.shields.io/badge/Stack-Python-3178C6?style=flat-square)
+![PySide6](https://img.shields.io/badge/Stack-PySide6-339933?style=flat-square)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
+
+<p align="center">
+  <a href="#features">Key Features</a> •
+  <a href="#quick-start">Quick Start</a> •
+  <a href="#workflow">Workflow</a> •
+  <a href="#structure">Project Structure</a> •
+  <a href="#documentation">Documentation</a>
+</p>
+
+[English](README.md) · [简体中文](README_zh.md)
+
+[Repository](https://github.com/langesmesser/can-message-converter) · [Issues](https://github.com/langesmesser/can-message-converter/issues)
+
+</div>
 
 ---
 
-CAN Message Converter is a free desktop tool for converting CAN bus log files across 6 formats — no commercial software required.
+<a name="overview"></a>
 
-The key features of CAN Message Converter are:
+## Overview
 
-- **Infrastructure as IR**: All format conversion passes through a unified `FrameRecord` intermediate representation. Each format only needs a Reader and a Writer — 4 inputs × 5 outputs covered by 9 modules instead of 20 point-to-point adapters.
-- **Execution Plans**: Batch conversion runs on a 4-thread parallel engine (`QThread` + `ThreadPoolExecutor`) with real-time progress reporting via Qt signals, keeping the UI responsive.
-- **Resource Graph**: Supported input formats are BLF (Vector binary), MF4/MDF4 (ASAM standard), ASC (Vector ASCII), and TXT (raw text dumps). Output targets include BLF, MF4, ASC, CSV, and XLSX — covering the full matrix of 12+ conversion paths.
-- **State Management**: 8 theme families × light/dark mode = 16 visual variants, with QSS generated dynamically from Python token dictionaries. All state is local — no cloud dependencies, no telemetry.
-
-For more information, refer to the [Architecture](#) section below.
+A Python and PySide6 desktop CAN log converter with a shared FrameRecord representation, batch processing, progress updates and selectable themes.
 
 ---
 
-## Usage
+<a name="features"></a>
 
-### GUI
+## Key Features
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>Shared representation</h3>
+      <p>Connect format readers and writers through FrameRecord rather than pairwise adapters.</p>
+    </td>
+    <td width="50%" valign="top">
+      <h3>Explicit conversion paths</h3>
+      <p>Read BLF, MF4, ASC and TXT; supported output combinations are listed in the format matrix.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>Batch progress</h3>
+      <p>Run conversions through QThread and a thread pool with per-file Qt progress signals.</p>
+    </td>
+    <td width="50%" valign="top">
+      <h3>Local desktop workflow</h3>
+      <p>Use eight theme families with light and dark modes and export TXT logs to XLSX.</p>
+    </td>
+  </tr>
+</table>
+
+---
+
+<a name="workflow"></a>
+
+## Workflow
+
+```mermaid
+flowchart LR
+    n0["BLF / MF4 / ASC / TXT"] --> n1
+    n1["Format reader"] --> n2
+    n2["FrameRecord"] --> n3
+    n3["Format writer"] --> n4
+    n4["Supported output file"]
+```
+
+---
+
+<a name="quick-start"></a>
+
+## Quick Start
+
+Use a Python environment compatible with PySide6, python-can and asammdf. Install dependencies before launching the GUI:
 
 ```bash
+git clone https://github.com/langesmesser/can-message-converter.git
+cd can-message-converter
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+# macOS / Linux: source .venv/bin/activate
+python -m pip install -r requirements.txt
 python src/main.py
 ```
 
-Drag and drop input files into the top card, select the desired output format from the dropdown, and click **Convert**. Progress is shown per file in real time.
+Drop input files into the window, choose a supported output format and convert. Output is written beside the input files. TXT input also supports XLSX export.
 
-**Quick workflow:**
-
-1. Drop `.blf`, `.mf4`, `.asc`, or `.txt` files into the input area
-2. Choose the output format (`.blf` / `.mf4` / `.asc` / `.csv`)
-3. Click **Convert** — output files land alongside the originals
-
-**One-click TXT → XLSX:** When the input is `.txt`, the **Convert to XLSX** button is available, producing a spreadsheet with columns: timestamp, channel, ID (hex), and data (hex).
-
-### Build .exe
-
-```bash
-python -m pytest tests/ -v    # all 97 tests must pass
-pyinstaller build.spec --noconfirm
-```
-
-### Supported formats
+### Supported conversion paths
 
 | Input | Output |
-|-------|--------|
-| `.blf` | `.mf4` / `.asc` / `.csv` |
-| `.mf4` | `.blf` / `.asc` / `.csv` |
-| `.asc` | `.blf` / `.mf4` / `.csv` |
-| `.txt` | `.asc` / `.xlsx` |
+| --- | --- |
+| BLF | MF4 / ASC / CSV |
+| MF4 | BLF / ASC / CSV |
+| ASC | BLF / MF4 / CSV |
+| TXT | ASC / XLSX |
 
 ---
 
-## Getting Started
+<a name="structure"></a>
 
-```bash
-python -m pytest tests/ -v    # all 97 tests must pass
-python src/main.py            # launch the GUI
-pyinstaller build.spec --noconfirm   # build single .exe
+## Project Structure
+
+```text
+can-message-converter/
+├── src/main.py             # GUI entry point
+├── src/converters/         # Format readers, writers and registry
+├── src/worker.py           # Batch tasks and progress signals
+├── src/ui/                 # Desktop interface and themes
+├── tests/                  # Automated validation
+└── build.spec              # PyInstaller build configuration
 ```
 
-If you're new to CAN bus data, the tool handles protocol details automatically — CAN FD DLC encoding, MF4 dual-strategy reading (composite struct vs. flat channels), and python-can C extension warnings are all managed internally.
+---
 
-## Developing
+<a name="development"></a>
 
-This repository contains the full source for the CAN Message Converter GUI application.
+## Development and Validation
 
-- [GitHub Issues](https://github.com/langesmesser/can-message-converter/issues) for bug reports and feature requests
+```bash
+python -m pytest tests/ -v
+pyinstaller build.spec --noconfirm
+```
 
-## License
+Tests cover converters, the format registry, integration paths and UI themes. Use the current local test output as the result.
 
-[MIT](LICENSE)
+---
+
+<a name="documentation"></a>
+
+## Documentation
+
+- [Formats and usage](#quick-start)
+- [Development and Validation](#development)
+
+---
+
+<a name="contributing"></a>
+
+## Contributing
+
+When reporting an issue, include the OS, version, reproduction steps, expected behavior and redacted logs. Check the relevant guidance and implementation, and run validation appropriate to your change.
+
+---
+
+<a name="license"></a>
+
+## License and Attribution
+
+See [MIT](LICENSE) for the license.
+
+<div align="center">
+
+### Project Activity
+
+[![Star History](https://api.star-history.com/svg?repos=langesmesser/can-message-converter&type=Date)](https://www.star-history.com/#langesmesser/can-message-converter&Date)
+
+[Contributors](https://github.com/langesmesser/can-message-converter/graphs/contributors)
+
+</div>

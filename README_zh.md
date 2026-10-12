@@ -1,69 +1,169 @@
-[English](README.md)
+<div align="center">
 
 # CAN Message Converter
 
-- [使用说明](#使用说明)
-- [开发](#开发)
-- [许可证](#许可证)
+**Convert CAN logs, keep the workflow local.**  
+*转换 CAN 日志，让流程留在本地。*
+
+![Python](https://img.shields.io/badge/Stack-Python-3178C6?style=flat-square)
+![PySide6](https://img.shields.io/badge/Stack-PySide6-339933?style=flat-square)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
+
+<p align="center">
+  <a href="#features">核心特性</a> •
+  <a href="#quick-start">快速上手</a> •
+  <a href="#workflow">工作流程</a> •
+  <a href="#structure">项目结构</a> •
+  <a href="#documentation">文档导航</a>
+</p>
+
+[English](README.md) · [简体中文](README_zh.md)
+
+[仓库主页](https://github.com/langesmesser/can-message-converter) · [反馈问题](https://github.com/langesmesser/can-message-converter/issues)
+
+</div>
 
 ---
 
-CAN Message Converter 是一款免费的 CAN 总线报文格式转换桌面工具，覆盖 6 种格式 — 无需商业软件。
+<a name="overview"></a>
 
-核心特性：
+## 项目简介
 
-- **IR 中间表示架构**：所有格式转换通过统一的 `FrameRecord` 中间表示进行。每种格式只需实现 Reader 和 Writer — 4 种输入 × 5 种输出仅需 9 个模块，而非 20 个端到端适配器。
-- **并行执行引擎**：批量转换运行在 4 线程并行引擎上（`QThread` + `ThreadPoolExecutor`），通过 Qt 信号实时上报进度，UI 始终保持响应。
-- **全格式覆盖**：支持输入格式 BLF（Vector 二进制）、MF4/MDF4（ASAM 标准）、ASC（Vector ASCII）和 TXT（原始文本 dump）。输出格式包括 BLF、MF4、ASC、CSV 和 XLSX — 覆盖 12+ 条转换路径。
-- **本地优先**：8 套主题 × 深色/浅色模式 = 16 种视觉变体，QSS 由 Python token 字典动态生成。完全本地运行 — 无云端依赖，无遥测。
+基于 Python 与 PySide6 的桌面 CAN 日志转换工具，通过统一 FrameRecord 中间表示读取与写出数据，提供批量处理、实时进度与主题切换。
 
 ---
 
-## 使用说明
+<a name="features"></a>
 
-### 图形界面
+## 核心特性
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>统一数据表示</h3>
+      <p>读写模块通过 FrameRecord 连接，减少格式间点对点耦合。</p>
+    </td>
+    <td width="50%" valign="top">
+      <h3>明确转换路径</h3>
+      <p>支持 BLF、MF4、ASC、TXT 输入；输出组合以格式矩阵为准。</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>批量进度</h3>
+      <p>QThread 与线程池执行转换，Qt 信号更新每个文件的处理进度。</p>
+    </td>
+    <td width="50%" valign="top">
+      <h3>本地桌面体验</h3>
+      <p>提供 8 组主题与明暗模式；TXT 可导出 XLSX。</p>
+    </td>
+  </tr>
+</table>
+
+---
+
+<a name="workflow"></a>
+
+## 工作流程
+
+```mermaid
+flowchart LR
+    n0["BLF / MF4 / ASC / TXT"] --> n1
+    n1["Format reader"] --> n2
+    n2["FrameRecord"] --> n3
+    n3["Format writer"] --> n4
+    n4["Supported output file"]
+```
+
+---
+
+<a name="quick-start"></a>
+
+## 快速上手
+
+需要可运行 PySide6、python-can 与 asammdf 的 Python 环境。先安装依赖，再启动界面：
 
 ```bash
+git clone https://github.com/langesmesser/can-message-converter.git
+cd can-message-converter
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+# macOS / Linux: source .venv/bin/activate
+python -m pip install -r requirements.txt
 python src/main.py
 ```
 
-将输入文件拖入上方卡片区域，在下拉框中选择目标格式，点击 **Convert** 即可。进度按文件实时显示。
+拖入输入文件，选择目标格式，点击转换；输出默认写入输入文件所在目录。TXT 输入可使用 XLSX 导出按钮。
 
-**快速流程：**
-
-1. 将 `.blf`、`.mf4`、`.asc` 或 `.txt` 文件拖入输入区域
-2. 选择输出格式（`.blf` / `.mf4` / `.asc` / `.csv`）
-3. 点击 **Convert** — 输出文件生成在原文件同目录
-
-**一键 TXT → XLSX：** 输入为 `.txt` 时，**Convert to XLSX** 按钮可用，产出包含时间戳、通道、ID(HEX)、数据(HEX) 列的电子表格。
-
-### 打包 .exe
-
-```bash
-python -m pytest tests/ -v    # 97 条测试必须全过
-pyinstaller build.spec --noconfirm
-```
-
-### 格式支持矩阵
+### 支持的转换路径
 
 | 输入 | 输出 |
-|------|------|
-| `.blf` | `.mf4` / `.asc` / `.csv` |
-| `.mf4` | `.blf` / `.asc` / `.csv` |
-| `.asc` | `.blf` / `.mf4` / `.csv` |
-| `.txt` | `.asc` / `.xlsx` |
+| --- | --- |
+| BLF | MF4 / ASC / CSV |
+| MF4 | BLF / ASC / CSV |
+| ASC | BLF / MF4 / CSV |
+| TXT | ASC / XLSX |
 
 ---
 
-## 开发
+<a name="structure"></a>
 
-本仓库包含 CAN Message Converter 的完整源代码。
+## 项目结构
 
-- 运行 `python -m pytest tests/ -v` 执行 97 条测试
-- 运行 `python src/main.py` 启动 GUI
-- 运行 `pyinstaller build.spec --noconfirm` 构建单文件 .exe
-- [GitHub Issues](https://github.com/langesmesser/can-message-converter/issues) 用于缺陷报告和功能请求
+```text
+can-message-converter/
+├── src/main.py             # GUI 启动入口
+├── src/converters/         # 格式读写与注册表
+├── src/worker.py           # 批量任务与进度信号
+├── src/ui/                 # 桌面界面与主题
+├── tests/                  # 转换与界面测试
+└── build.spec              # PyInstaller 打包配置
+```
 
-## 许可证
+---
 
-[MIT](LICENSE)
+<a name="development"></a>
+
+## 开发与验证
+
+```bash
+python -m pytest tests/ -v
+pyinstaller build.spec --noconfirm
+```
+
+测试覆盖转换器、格式注册表、集成路径与界面主题。实际测试结果以本地运行输出为准。
+
+---
+
+<a name="documentation"></a>
+
+## 文档导航
+
+- [格式矩阵与操作](#quick-start)
+- [开发与验证](#development)
+
+---
+
+<a name="contributing"></a>
+
+## 参与贡献
+
+反馈时请说明系统、版本、使用步骤、预期行为和脱敏日志。提交改动前核对相关指南与实际实现，并运行与改动有关的验证。
+
+---
+
+<a name="license"></a>
+
+## 许可证与来源
+
+许可证见 [MIT](LICENSE)。
+
+<div align="center">
+
+### 项目活动
+
+[![Star History](https://api.star-history.com/svg?repos=langesmesser/can-message-converter&type=Date)](https://www.star-history.com/#langesmesser/can-message-converter&Date)
+
+[贡献记录](https://github.com/langesmesser/can-message-converter/graphs/contributors)
+
+</div>
